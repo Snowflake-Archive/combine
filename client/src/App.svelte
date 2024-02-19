@@ -123,7 +123,8 @@
     <main class="w-full">
       <nav class={`h-screen max-xl:w-full w-64 bg-slate-800 border-r-slate-950 border-r-[1px] border-solid py-4 flex flex-col justify-between fixed max-xl:py-2 ${menuVisible ? "" : "max-xl:h-11"} overflow-hidden transition-all duration-500 z-50`}>
         <div class="flex flex-col">
-          <div class="text-lg px-4 font-bold pb-2 flex flex-row justify-between items-center">Balls Production Center
+          <div class="text-lg px-4 font-bold pb-2 flex flex-row justify-between items-center">
+            Combine Web
             <button class="max-xl:visible invisible" on:click={() => {
               menuVisible = !menuVisible;
             }}>
