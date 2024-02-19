@@ -1,0 +1,17 @@
+version: "3.7"
+services:
+  web:
+    restart: unless-stopped
+    build: ./client
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_WS_URL=ws://localhost:5678
+  ws:
+    restart: unless-stopped
+    build: ./server
+    ports:
+      - "5678:5678"
+    environment:
+      - WEB_TOKEN=secret
+      - TURTLE_TOKEN=secret2

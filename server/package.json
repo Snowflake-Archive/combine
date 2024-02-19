@@ -1,0 +1,30 @@
+{
+  "name": "snowflake-combine-ws",
+  "version": "2.0.0",
+  "description": "Snowflake Combine",
+  "scripts": {
+    "build": "tsc",
+    "start": "bun run build/index.js",
+    "dev": "nodemon src/index.ts"
+  },
+  "author": "znepb",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.20.1",
+    "concurrently": "^7.5.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.4",
+    "express": "^4.18.2",
+    "prettier": "^3.2.5",
+    "typescript": "^5.3.3",
+    "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/express-ws": "^3.0.4",
+    "@types/node": "^20.11.19",
+    "@types/ws": "^8.5.10",
+    "nodemon": "^2.0.20"
+  }
+}
