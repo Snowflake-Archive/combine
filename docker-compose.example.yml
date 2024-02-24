@@ -5,8 +5,8 @@ services:
     build: ./client
     ports:
       - "4173:4173"
-    environment:
-      - VITE_WS_URL=ws://localhost:5678
+    volumes:
+      - ./config.json5:/usr/src/app/dist/config.json5
   ws:
     restart: unless-stopped
     build: ./server
@@ -15,3 +15,4 @@ services:
     environment:
       - WEB_TOKEN=secret
       - TURTLE_TOKEN=secret2
+      - PORT=5678
