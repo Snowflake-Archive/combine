@@ -1,15 +1,35 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import Warning from './lib/Warning.svelte';
-  import type { BasicState, Turtle } from './types';
-  import { icons } from './icons';
+  import type { BasicState, Turtle, WebConfig } from './types';
   import CropFarm from './lib/CropFarm.svelte';
+  import json5 from "json5";
 
   let socket: WebSocket;
+  let config: WebConfig;
 
-  function auth() {
+  fetch("/config.json5").then(async (res) => {
+    config = json5.parse(await res.text());
+  }).catch((err) => {
+    console.error(err);
+    alert("Failed to load config: " + err);
+  })
+
+  async function auth() {
+    await new Promise<void>((res) => { 
+      const wait = () => {
+        if(config) {
+          res();
+        } else {
+          setTimeout(wait, 100);
+        }
+      }
+
+      wait();
+    });
+
     console.log(import.meta.env)
-    const tempSocket = new WebSocket(import.meta.env.VITE_WS_URL!);
+    const tempSocket = new WebSocket(config.websocket);
     tempSocket.addEventListener("error", (ev) => {
       console.error(ev);
       loginMessage = "Failed to connect to server";
@@ -119,12 +139,12 @@
 </script>
 
 <main class="bg-slate-900 min-h-screen flex flex-row">
-  {#if isAuthed}
+  {#if isAuthed && config}
     <main class="w-full">
       <nav class={`h-screen max-xl:w-full w-64 bg-slate-800 border-r-slate-950 border-r-[1px] border-solid py-4 flex flex-col justify-between fixed max-xl:py-2 ${menuVisible ? "" : "max-xl:h-11"} overflow-hidden transition-all duration-500 z-50`}>
         <div class="flex flex-col">
           <div class="text-lg px-4 font-bold pb-2 flex flex-row justify-between items-center">
-            Combine Web
+            { config?.name || "Snowflake Combine" }
             <button class="max-xl:visible invisible" on:click={() => {
               menuVisible = !menuVisible;
             }}>
@@ -161,7 +181,7 @@
               {#if turtle.hasWarning}
                 <Warning className="fill-orange-500 pr-1" />
               {/if}
-              <img src={icons[turtle.block] || "/icons/minecraft/textures/item/diamond_hoe.png"} class="w-6 h-6" style="image-rendering: crisp-edges;" alt="turtle" />
+              <img src={config.cropIcons[turtle.block] || "/icons/minecraft/textures/item/diamond_hoe.png"} class="w-6 h-6" style="image-rendering: crisp-edges;" alt="turtle" />
               <div class="pl-2 h-6 text-nowrap overflow-hidden whitespace-nowrap text-ellipsis">{turtle.name}</div>
             </div>
           {/each}
@@ -180,7 +200,7 @@
       </nav>
       <main class={`p-4 w-full max-xl:p-2 max-xl:pl-2 max-xl:pt-[2.25rem] pl-[18rem]`}>
         {#if currentTurtle}
-          <CropFarm currentTurtle={currentTurtle} updateIter={updateIter} invUpdateIter={invUpdateIter} socket={socket} />
+          <CropFarm currentTurtle={currentTurtle} updateIter={updateIter} invUpdateIter={invUpdateIter} socket={socket} config={config} />
         {:else}
           <div class="flex items-center justify-center h-screen">
             <div class="text-2xl font-bold">Select a turtle to view</div>
@@ -192,7 +212,7 @@
     <main class="flex flex-col justify-between h-screen w-screen">
       <div></div>
       <div class="flex items-center justify-center  flex-col gap-2">
-        <div class="text-2xl font-bold">Snowflake Combine</div>
+        <div class="text-2xl font-bold">{ config?.name || "Snowflake Combine" }</div>
         <input type="password" class="bg-slate-600 border-slate-500 border rounded-lg p-1 px-2" bind:value={key} />
         <label class="flex items-center gap-2">
           <input type="checkbox" class="border-slate-500 border rounded-lg p-1 px-2" bind:checked={remember} />

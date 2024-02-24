@@ -112,3 +112,11 @@ export type Config = {
   fuelLimit: number | "unlimited";
   version: string;
 };
+
+export type WebConfig = {
+  websocket: string;
+  name: string
+  cropColors: { [key: string]: string };
+  cropIcons: { [key: string]: string };
+  blockColors: { [key: string]: string };
+}

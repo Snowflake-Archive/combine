@@ -289,10 +289,8 @@ local function new(willUseAbsolute, debug, debugFunc)
 
     if dir == "down" then placeFunc = turtle.placeDown elseif dir == "up" then placeFunc = turtle.placeUp end
     local exists = select(what)
-    if not exists then return false end
-
-    placeFunc()
-    return true
+    
+    return exists and placeFunc()
   end
 
   --- Turns in the specified direction.

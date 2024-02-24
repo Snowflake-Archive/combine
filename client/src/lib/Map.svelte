@@ -1,7 +1,8 @@
 <script lang="typescript">
   import { onMount } from "svelte";
-  import type { Turtle } from "../types";
+  import type { Turtle, WebConfig } from "../types";
 
+  export let config: WebConfig;
   export let turtle: Turtle;
   $: updateCanvas();
 
@@ -33,17 +34,8 @@
     }
   }
 
-  const cropColors: {[key: string]: [string, string]} = {
-    greenscale: ["rgb(255, 0, 0)", "rgb(0, 255, 0)"],
-    wheat: ["rgb(10, 69, 0)", "rgb(168, 131, 15)"],
-    carrots: ["rgb(30, 73, 23)", "rgb(186, 105, 19)"],
-  }
-
-  const blockColors: {[key: string]: {r: number, b: number, g: number}} = {
-    sand: { r: 224, g: 207, b: 148 },
-    farmland: { r: 54, g: 41, b: 30 },
-    water: {r: 0, g: 0, b: 255},
-  }
+  const toRgbString = (color: {r: number, g: number, b: number}) =>
+    `rgb(${color.r}, ${color.g}, ${color.b})`
   
   let canvas: HTMLCanvasElement | null;
   $: updateCanvas();
@@ -106,17 +98,18 @@
       if(x < 0 || y < 0) return;
       if(x > canvas.width || y > canvas.height) return;
 
-      const cropColor = item.a !== undefined ? cropColors[item.b] : undefined
-      const blockColor = blockColors[item.b]
+      const cropColor = item.a !== undefined ? config.cropColors[item.b] : undefined
+      const blockColor = config.blockColors[item.b]
 
       ctx.beginPath();
       const colorData = 
         cropColor
-          ? colorInterpolate(cropColors[item.b][0], cropColors[item.b][1], item.a) 
+          ? toRgbString(colorInterpolate(config.cropColors[item.b][0], config.cropColors[item.b][1], item.a))
           : blockColor
           ? blockColor
-          : { r: 0, g: 0, b: 0 };
-      const fillStyle =`rgb(${colorData.r}, ${colorData.g}, ${colorData.b})`;
+          : "rgb(0, 0, 0)"
+
+      const fillStyle = colorData
       ctx.fillStyle = fillStyle
       ctx.rect(x, y, cellSizeX, cellSizeY);
       ctx.fill();
@@ -133,4 +126,4 @@
   })
 </script>
 
-<canvas bind:this={canvas} class="max-w-[512px] max-h-[512px] w-full h-full bg-slate-800" width={512} height={512} style="image-rendering: optimizeSpeed;"></canvas>
+<canvas bind:this={canvas} class="max-w-[512px] max-h-[512px] w-full h-full bg-slate-800" style="image-rendering: optimizeSpeed;"></canvas>

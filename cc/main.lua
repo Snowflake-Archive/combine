@@ -477,7 +477,11 @@ local ok, err = pcall(function()
           function(tX, tY, tZ)
             -- Dig down and replace
             tortise.dig("down")
-            tortise.place("down", config.seed.name or config.item.name)
+            local didPlaceSeed = tortise.place("down", config.seed.name or config.item.name)
+            if didPlaceSeed == false then
+              msg("Failed to place seed")
+              warnings["No seeds"] = true
+            end
             for i, v in pairs(map) do
               if v.x == tX and v.y == tY and v.z == tZ then
                 map[i].state = { age = 0 }
@@ -558,7 +562,7 @@ local ok, err = pcall(function()
 
       -- Drop waste items
       for i, v in pairs(config.wasteItems) do
-        local count, slots = tortise.count(i)
+        local count, slots = tortise.count(v)
         for i, s in pairs(slots) do
           turtle.select(s)
           turtle.dropDown()
@@ -573,9 +577,12 @@ local ok, err = pcall(function()
       if fuelLevel < config.refuelLevel then
         transmitState(config.home, roundText .. "Refueling")
         turtle.select(tortise.findFreeSlot())
-        turtle.suckUp(64)
-        turtle.refuel(64)
-        msg("Refueled, new level is", turtle.getFuelLevel())
+        turtle.suckUp()
+        if turtle.refuel(turtle.getItemCount()) then
+          msg("Refueled, new level is", turtle.getFuelLevel())
+        else
+          msg("Failed to refuel")
+        end
       end
     end
 

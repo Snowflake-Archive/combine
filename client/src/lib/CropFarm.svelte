@@ -1,12 +1,14 @@
 <script lang="ts">
+  import type { Turtle, WebConfig } from "../types";
   import InventoryComponent from "./InventoryComponent.svelte";
   import Map from "./Map.svelte";
   import Warning from "./Warning.svelte";
 
-  export let currentTurtle: import("../types").Turtle;
+  export let currentTurtle: Turtle;
   export let updateIter: number;
   export let invUpdateIter: number;
   export let socket: WebSocket;
+  export let config: WebConfig;
   
   let updateScreenVisible = false;
   let tortiseURL: string | undefined = undefined;
@@ -129,11 +131,11 @@
       </div>
 
       <button class="px-3 py-1 bg-blue-500 rounded-full pt-[0.125rem] hover:bg-blue-400" on:click={() => updateScreenVisible = true}>
-        Send Update
+        Send Update...
       </button>
     </div>
 
-    <Map turtle={currentTurtle} updateIter={updateIter} />
+    <Map turtle={currentTurtle} updateIter={updateIter} config={config} />
     
   </div>
 {:else}

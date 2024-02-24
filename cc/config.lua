@@ -27,7 +27,7 @@ return {
   home = {-24, 58, 7},
   block = {
     -- The block to search for on the farmland.
-    name = "minecraft:carrots",
+    name = "minecraft:wheat",
     -- The age of the block to search for.
     age = 7
   },
@@ -37,7 +37,10 @@ return {
   -- until it is refueled.
   dangerousFuelLevel = 256,
   -- Items that the turtle does not need, such as poisonous potatoes.
-  wasteItems = {},
+  wasteItems = {
+    "minecraft:poisonous_potato",
+    "minecraft:bucket"
+  },
   -- The area to search for farmland and to keep the turtle within.
   bounds = {
     -- The +X, +Y, +Z corner of the area.

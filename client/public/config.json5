@@ -1,0 +1,43 @@
+// Client Configuration File
+
+{
+  "websocket": "ws://localhost:5678",
+  // The title to display at the top of the sidebar.
+  "name": "Snowflake Combine",
+  // The color range for each crop. The first color is for
+  // when the crop has just started growing, and the second
+  // color is for when the crop is fully grown. These must
+  // be in the format "rgb(r, g, b)". The index name is the
+  // item ID of the crop block. If it is a Minecraft crop,
+  // the namespace (minecraft:) must be omitted.
+  "cropColors": {
+    "_default": ["rgb(255, 0, 0)", "rgb(0, 255, 0)"],
+    "wheat": ["rgb(10, 69, 0)", "rgb(168, 131, 15)"],
+    "carrots": ["rgb(30, 73, 23)", "rgb(186, 105, 19)"],
+    "potatoes": ["rgb(10, 69, 0)", "rgb(190, 154, 73)"],
+    "beetroots": ["rgb(10, 69, 0)", "rgb(147, 32, 25)"]
+  },
+  // Icons that each crop will display in the sidebar.
+  // The index name is the item ID of the crop block.
+  "cropIcons": {
+    "_default": "/icons/minecraft/textures/item/diamond_hoe.png",
+    "minecraft:wheat": "/icons/minecraft/textures/item/wheat.png",
+    "minecraft:carrots": "/icons/minecraft/textures/item/carrot.png",
+    "minecraft:potatoes": "/icons/minecraft/textures/item/potato.png",
+    "minecraft:beetroot": "/icons/minecraft/textures/item/beetroot.png",
+    "minecraft:cactus": "/icons/minecraft/textures/block/cactus_side.png",
+    "minecraft:cocoa_beans": "/icons/minecraft/textures/item/cocoa_beans.png",
+    "minecraft:melon": "/icons/minecraft/textures/item/melon.png",
+    "minecraft:pumpkin": "/icons/minecraft/textures/block/pumpkin_side.png",
+    "minecraft:sugar_cane": "/icons/minecraft/textures/block/sugar_cane.png",
+    "minecraft:nether_wart": "/icons/minecraft/textures/item/nether_wart.png"
+  },
+  // The color that blocks will appear as in the map. The index
+  // name is the block ID of the block. If it is a Minecraft block,
+  // the namespace (minecraft:) must be omitted.
+  "blockColors": {
+    sand: "rgb(224, 207, 148)",
+    farmland: "rgb(54, 41, 30)",
+    water: "rgb(0, 0, 255)"
+  }
+}
