@@ -99,7 +99,7 @@ local ok, err = pcall(function()
     args[i] = v
   end
 
-  local VERSION = "2.0.0-pre1"
+  local VERSION = "2.0.0"
 
   local itemRequirements = {
     [config.item.name] = { min = config.item.min, max = config.item.max }

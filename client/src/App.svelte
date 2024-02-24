@@ -224,7 +224,7 @@
         {/if}
       </div>
       <footer class="pb-5 text-center text-slate-500">
-        <div class="leading-5">2.0.0-pre1</div>
+        <div class="leading-5">2.0.0</div>
         <div class="leading-5">Built by Snowflake Software © 2024</div>
       </footer>
     </main>
