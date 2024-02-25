@@ -127,7 +127,7 @@ export const TurtleConfig = z.object({
     }),
     refuelLevel: z.number(),
     dangerousFuelLevel: z.number(),
-    wasteItems: z.array(z.string()),
+    wasteItems: z.array(z.string()).or(z.object({})),
     bounds: z.object({
       max: Vector3,
       min: Vector3
