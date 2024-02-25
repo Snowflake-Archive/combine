@@ -5,7 +5,7 @@
   "scripts": {
     "build": "tsc",
     "start": "bun run build/index.js",
-    "dev": "nodemon src/index.ts"
+    "dev": "bun --watch src/index.ts"
   },
   "author": "znepb",
   "license": "MIT",
@@ -17,7 +17,8 @@
     "express": "^4.18.2",
     "prettier": "^3.2.5",
     "typescript": "^5.3.3",
-    "ws": "^8.16.0"
+    "ws": "^8.16.0",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",

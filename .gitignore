@@ -2,3 +2,4 @@ node_modules
 client/public/icons
 build
 .env
+client/public/config.json5
