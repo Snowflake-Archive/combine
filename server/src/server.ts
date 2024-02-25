@@ -21,6 +21,10 @@ export class WebsocketServer {
     WebsocketServer.server.on("connection", this.handleNewConnection)
   }
 
+  public static close() {
+    WebsocketServer.server.close();
+  }
+
   private handleNewConnection(socket: WebSocket) {
     const connection = WebsocketServer.totalConnections;
     console.log(`New connection (#${connection})`);
