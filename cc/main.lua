@@ -1,5 +1,5 @@
 --[[
-  Snowflake Combine v2.0.0
+  Snowflake Combine v2.0.1
   https://github.com/Snowflake-Software/combine
   Written by znepb
 
@@ -45,6 +45,8 @@
   ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR
   THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
+
+local VERSION = "2.0.1"
 
 ----------------------
 -- Argument Reading --
@@ -98,8 +100,6 @@ local ok, err = pcall(function()
   for i, v in pairs(config.execArgs) do
     args[i] = v
   end
-
-  local VERSION = "2.0.0"
 
   local itemRequirements = {
     [config.item.name] = { min = config.item.min, max = config.item.max }
@@ -227,6 +227,7 @@ local ok, err = pcall(function()
     if data and data.type == "auth" and data.success == true then
       ws = _ws
       connected = true
+      messageQueue = {}
       msg("[WS] Connected successfully")
       draw()
 
@@ -252,7 +253,10 @@ local ok, err = pcall(function()
         debug("[WS] MSG (CfgTrans) Size:", #msg)
   
         addToMessageQueue(msg)
-        connected = true
+
+        transmitState()
+        transmitMap()
+        transmitInventory()
       end)
     else
       msg("[WS] Failed to authenticate with websocket")
@@ -308,7 +312,6 @@ local ok, err = pcall(function()
       debug("[WS] MSG (MapTrans) Size:", #msg)
 
       addToMessageQueue(msg)
-      connected = true
     end)
 
     if not ok then
@@ -345,7 +348,6 @@ local ok, err = pcall(function()
       debug("[WS] MSG (PosTrans) Size:", #msg)
 
       addToMessageQueue(msg)
-      connected = true
     end)
 
     if not ok then
@@ -378,7 +380,6 @@ local ok, err = pcall(function()
       debug("[WS] MSG (InvTrans) Size:", #msg)
 
       addToMessageQueue(msg)
-      connected = true
     end)
 
     if not ok then
@@ -438,7 +439,6 @@ local ok, err = pcall(function()
       debug("[WS] MSG (StateTrans) Size:", #msg)
 
       addToMessageQueue(msg)
-      connected = true
     end)
 
     if not ok then
@@ -538,7 +538,7 @@ local ok, err = pcall(function()
     end
 
     local function drop(fRound)
-      local roundText = fRound and " (Round #" .. tostring(fRound) .. ") " or ""
+      local roundText = fRound and "(Round #" .. tostring(fRound) .. ") " or ""
       -- Remove extra items
       transmitState(config.home, roundText .. "Emptying inventory")
       for i, v in pairs(itemRequirements) do
@@ -577,9 +577,20 @@ local ok, err = pcall(function()
       if fuelLevel < config.refuelLevel then
         transmitState(config.home, roundText .. "Refueling")
         turtle.select(tortise.findFreeSlot())
-        turtle.suckUp()
+
+        turtle.suckUp(1)
+
+        sleep()
+        local detail = turtle.getItemDetail(nil, true)
+
+        if detail.maxCount > 1 then
+          local count = math.min(detail.count, detail.maxCount - 1)
+          turtle.suckUp(count)
+        end
+
         if turtle.refuel(turtle.getItemCount()) then
           msg("Refueled, new level is", turtle.getFuelLevel())
+          turtle.dropDown()
         else
           msg("Failed to refuel")
         end

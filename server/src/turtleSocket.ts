@@ -71,6 +71,7 @@ export class TurtleSocket extends Socket {
         turtleState: this.state,
       }));
     } else if (message.type === "turtle_pos") {
+      if (this.state === undefined) return;
       this.state.position = message.position;
       this.state.facing = message.facing;
 
