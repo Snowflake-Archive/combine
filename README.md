@@ -13,7 +13,7 @@ Remotely monitor crop farms on ComputerCraft & Plethora on a website!
     - **Caution:** Make sure you copy these files, otherwise you will experience merge conflicts.
 3. Adjust the environment variables in docker-compose.yml
     - The web and turtle tokens must NOT be the safe.
-4. Copy `config.example.json5` to `config.json5`. 
+4. Copy `config.example.json5` to `config.json5`.
     - **Caution:** Make sure you copy these files, otherwise you will experience merge conflicts.
 5. Adjust the configuration to your liking.
 6. Create a folder with icons for mods.
