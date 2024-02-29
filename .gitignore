@@ -3,3 +3,8 @@ client/public/icons
 build
 .env
 client/public/config.json5
+config.json5
+docker-compose.yml
+server/package-lock.json
+server/yarn.lock
+server/pnpm-lock.yml

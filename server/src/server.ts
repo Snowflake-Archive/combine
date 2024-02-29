@@ -1,12 +1,10 @@
 import ws, { WebSocket } from "ws";
-import "dotenv/config";
 import { Auth, MessageBase, TurtleAuth } from "schemas";
-import { z } from "zod";
 import { ClientSocket } from "clientSocket";
 import { TurtleSocket } from "turtleSocket";
 import Socket from "socket";
 
-const port = process.env.PORT || 5678;
+const port = parseInt(process.env.PORT!) || 5678;
 
 export class WebsocketServer {
   public static server: ws.Server = new ws.Server({ port: Number(port), perMessageDeflate: false });
@@ -28,7 +26,7 @@ export class WebsocketServer {
   private handleNewConnection(socket: WebSocket) {
     const connection = WebsocketServer.totalConnections;
     console.log(`New connection (#${connection})`);
-    (WebsocketServer.totalConnections)++;
+    WebsocketServer.totalConnections++;
 
     socket.once("close", () => {
       console.log(`Connection closed (#${connection})`);
@@ -37,13 +35,11 @@ export class WebsocketServer {
     socket.once("message", (rawMessage: Buffer) => {
       try { 
         const _message = JSON.parse(rawMessage.toString());
+        const data = Auth.safeParse(_message);
 
-        if (!Auth.safeParse(_message)) { 
-          throw new Error("Invalid message");
-        };
+        if (!data.success) throw new Error("Invalid message");
 
-        // type transformers are not working :(
-        const message = _message as z.infer<typeof Auth>;
+        const message = data.data;
 
         if (message.key == process.env.WEB_TOKEN) {
           const clientSocket = new ClientSocket(socket, message);
@@ -51,7 +47,7 @@ export class WebsocketServer {
           WebsocketServer.prepSocket(clientSocket);
           console.log(`Connection authed as web (#${connection})`);
         } else if (message.key == process.env.TURTLE_TOKEN) {
-          const turtleSocket = new TurtleSocket(socket, message as any as z.infer<typeof TurtleAuth>);
+          const turtleSocket = new TurtleSocket(socket, TurtleAuth.parse(message));
           WebsocketServer.turtleSockets.push(turtleSocket);
           WebsocketServer.prepSocket(turtleSocket);
           console.log(`Connection authed as turtle (#${connection})`);

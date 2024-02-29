@@ -28,12 +28,8 @@ export class TurtleSocket extends Socket {
 
   onMessage(_message: unknown): void {
     const test = TurtleMessages.safeParse(_message)
-    if (!test.success) {
-      //console.log((_message as any).type)
-      //console.log(test.error);
-      return;
-    }
-    const message = _message as z.infer<typeof TurtleMessages>;
+    if (!test.success) return;
+    const message = test.data;
 
     if (message.type === "turtle_config") {
       this.config = message.config;
