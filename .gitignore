@@ -1,10 +1,24 @@
 node_modules
 client/public/icons
 build
+dist
 .env
 client/public/config.json5
 config.json5
 docker-compose.yml
-server/package-lock.json
-server/yarn.lock
-server/pnpm-lock.yml
+package-lock.json
+yarn.lock
+pnpm-lock.yml
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
