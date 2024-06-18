@@ -67,6 +67,12 @@
               }
               updateIter++;
               break;
+            case "turtle_yields":
+              if(currentTurtle?.id == message.of) {
+                currentTurtle!.yields = message.yields;
+              }
+              updateIter++;
+              break;
             case "turtle_state":
               if(!currentTurtle) return;
               currentTurtle.state = message.turtleState;
@@ -100,6 +106,7 @@
                 map: message.turtle.map,
                 inventory: message.turtle.inventory,
                 config: message.turtle.config,
+                yields: message.turtle.yields
               };
               updateIter++;
               break;

@@ -351,14 +351,14 @@ local function new(willUseAbsolute, debug, debugFunc)
   --- TODO: When destructive is not supplied, attempt to get there via pathfinding.
   -- @param distance number The distance to move.
   -- @param direction string One of: [north, east, south, west, forward, right, left, back, +x, -x, +y, -y, +z, -z, up, down]. Moves in that direction.
-  -- @param destructive boolean When set to true, the turtle will break blocks to reach its target.
+  -- @param destructive boolean|table When set to true, the turtle will break blocks to reach its target. If a table is supplied, it will be used as a block filter.
   -- @param singleMove function Executes with a X, Y, and Z parameter when the turtles moves.
   -- @returns boolean, number, string True if the move succeeded, number of blocks moved, reason for failure if target could not be reached.
   local function move(distance, direction, destructive, singleMove)
     expect(1, distance, "number")
     expect(2, direction, "string")
-    expect(3, destructive, "boolean", "nil")
-    expect(4, singleMove, "function", "nil")
+    expect(3, destructive, "boolean", "table", "nil")
+    expect(4, singleMove, "function", "table", "nil")
 
     -- No need to do anything if the distance is 0
     if distance == 0 then return true, 0 end
@@ -442,8 +442,16 @@ local function new(willUseAbsolute, debug, debugFunc)
     if direction == "up" then moveFunc = turtle.up end
     if direction == "down" then moveFunc = turtle.down end
 
+    local filterIndex = {}
+
     -- Destructive movement
     if destructive then
+      if type(destructive) == "table" then
+        for i, v in pairs(destructive) do
+          filterIndex[v] = true
+        end
+      end
+
       local moved = 0
       local digFunc = turtle.dig
       if direction == "up" then digFunc = turtle.digUp() end
@@ -453,8 +461,12 @@ local function new(willUseAbsolute, debug, debugFunc)
         local success, reason = moveFunc()
         if not success then
           equip(items.PICKAXE)
-          digFunc()
-          success, reason = moveFunc()
+          local exists, inspection = turtle.inspect()
+
+          if destructive == true or (exists and filterIndex[inspection.name]) then
+            digFunc()
+            success, reason = moveFunc()
+          end
 
           if not success then
             return false, moved, reason
@@ -490,13 +502,13 @@ local function new(willUseAbsolute, debug, debugFunc)
   -- @param rX number The relative X value
   -- @param rY number The relative Y value
   -- @param rZ number The relative Z value
-  -- @param destructive boolean When set to true, the turtle will break blocks to reach its target.
+  -- @param destructive boolean|table When set to true, the turtle will break blocks to reach its target. If a table is supplied, it will be used as a block filter.
   -- @param singleMove function Executes with a X, Y, and Z parameter when the turtles moves.
   local function goToRelativePosition(rX, rY, rZ, destructive, singleMove)
     expect(1, rX, "number")
     expect(2, rY, "number")
     expect(3, rZ, "number")
-    expect(4, destructive, "boolean", "nil")
+    expect(4, destructive, "boolean", "table", "nil")
     expect(5, singleMove, "function", "nil")
 
     debugMsg("Going to relative, position", rX, rY, rZ, "destructive:", destructive)
@@ -525,13 +537,13 @@ local function new(willUseAbsolute, debug, debugFunc)
   -- @param aX number The absolute X value
   -- @param aY number The absolute Y value
   -- @param aZ number The absolute Z value
-  -- @param destructive boolean When set to true, the turtle will break blocks to reach its target.
+  -- @param destructive boolean|table When set to true, the turtle will break blocks to reach its target. If a table is supplied, it will be used as a block filter.
   -- @param singleMove function Executes with a X, Y, and Z parameter when the turtles moves.
   local function goToAbsolutePosition(aX, aY, aZ, destructive, singleMove)
     expect(1, aX, "number")
     expect(2, aY, "number")
     expect(3, aZ, "number")
-    expect(4, destructive, "boolean", "nil")
+    expect(4, destructive, "boolean", "table", "nil")
     expect(5, singleMove, "function", "nil")
 
     debugMsg("Going to absolute, position", aX, aY, aZ, "destructive:", destructive, "current pos:", x, y, z, "dist:", aX - x, aY - y, aZ - z)
@@ -608,7 +620,8 @@ local function new(willUseAbsolute, debug, debugFunc)
   -- @param continuous boolean Once the turtle reaches all of the blocks it has found, when this is set to true, it will continue to search for more.
   -- @param foundTarget function Executes with a X, Y, and Z parameter whenever a target is found.
   -- @param singleMove function Executes with a X, Y, and Z parameter when the turtles moves.
-  local function goToAll(block, state, reachedFunction, dontMoveOnY, posFunction, continuous, foundTarget, singleMove)
+  -- @param destructive boolean|table When set to true, the turtle will break blocks to reach its target. If a table is supplied, it will be used as a block filter.
+  local function goToAll(block, state, reachedFunction, dontMoveOnY, posFunction, continuous, foundTarget, singleMove, destructive)
     expect(1, block, "string")
     expect(2, state, "table", "nil")
     expect(3, reachedFunction, "function", "nil")
@@ -617,6 +630,7 @@ local function new(willUseAbsolute, debug, debugFunc)
     expect(6, continuous, "boolean", "nil")
     expect(7, foundTarget, "function", "nil")
     expect(8, singleMove, "function", "nil")
+    expect(9, destructive, "boolean", "table", "nil")
 
     local blocks = scanForMatchingBlocks(block, state, posFunction)
     -- cd stands for "current displacement"
@@ -639,7 +653,7 @@ local function new(willUseAbsolute, debug, debugFunc)
           foundTarget(closest.x, dontMoveOnY and 0 or closest.y, closest.z, blocksChecked, totalBlocks)
         end
 
-        local _, displacement = goToRelativePosition(closest.x, dontMoveOnY and 0 or (closest.y), closest.z, nil, singleMove)
+        local _, displacement = goToRelativePosition(closest.x, dontMoveOnY and 0 or (closest.y), closest.z, destructive, singleMove)
         cdX = cdX + displacement.x
         cdY = cdY + displacement.y
         cdZ = cdZ + displacement.z

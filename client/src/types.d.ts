@@ -81,6 +81,12 @@ export type Turtle = {
   map?: TurtleMap;
   inventory?: Inventory;
   config?: Config;
+  yields?: {
+    [key: number]: {
+      items: number;
+      seeds: number;
+    };
+  };
 };
 
 export type Config = {
@@ -119,4 +125,5 @@ export type WebConfig = {
   cropColors: { [key: string]: string };
   cropIcons: { [key: string]: string };
   blockColors: { [key: string]: string };
+  nameOverrides: { [key: string]: string };
 }

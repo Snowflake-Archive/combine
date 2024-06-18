@@ -47,5 +47,10 @@ return {
     max = {-17, 58, 15},
     -- The -X, -Y, -Z corner of the area.
     min = {-32, 57, 0}
+  },
+  -- Blocks that are safe to destroy while searching for crops.
+  safeDestroyBlocks = {
+    "minecraft:sugar_cane",
+    "minecraft:cactus"
   }
 }

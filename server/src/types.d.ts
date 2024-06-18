@@ -1,4 +1,4 @@
-import { Facing, TurtleConfig, TurtleFullState, TurtleInventory, TurtleMap, TurtleState, Vector2, Vector3 } from "schemas";
+import { Facing, TurtleConfig, TurtleConfigs, TurtleFullState, TurtleInventory, TurtleMap, TurtleState, Vector2, Vector3 } from "schemas";
 import WebSocket from "ws";
 import { z } from "zod";
 
@@ -16,4 +16,4 @@ export type BasicState = {
 export type FullState = z.infer<typeof TurtleFullState>;
 export type TurtleMap = z.infer<typeof TurtleMap>["map"];
 export type Inventory = z.infer<typeof TurtleInventory>["inventory"];
-export type Config = z.infer<typeof TurtleConfig>["config"];
+export type Config = z.infer<typeof TurtleConfigs>

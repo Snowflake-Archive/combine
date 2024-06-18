@@ -15,7 +15,8 @@ export const MessageBase = z.object({
       "turtle_pos",
       "turtle_map",
       "turtle_inventory",
-      "turtle_config"
+      "turtle_config",
+      "turtle_yields"
     ]
   ),
 });
@@ -100,41 +101,68 @@ export const TurtleInventory = z.object({
   }).partial().or(z.null())).max(16)
 });
 
-export const TurtleConfig = z.object({
-  type: z.literal("turtle_config"),
-  id: z.number(),
-  config: z.object({
-    item: z.object({
+export const TurtleConfigBase = z.object({
+  item: z.object({
+    name: z.string(),
+    min: z.number(),
+    max: z.number()
+  }),
+  home: Vector3,
+  refuelLevel: z.number(),
+  dangerousFuelLevel: z.number(),
+  wasteItems: z.array(z.string()).or(z.object({})),
+  bounds: z.object({
+    max: Vector3,
+    min: Vector3
+  }),
+  fuelLimit: z.union([z.number(), z.literal("unlimited")])
+})
+
+export const TurtleConfigPlant = TurtleConfigBase.merge(z.object({
+  mode: z.literal("plant"),
+  seed: z.union([
+    z.object({
+      sameAsItem: z.literal(false),
       name: z.string(),
       min: z.number(),
       max: z.number()
     }),
-    seed: z.union([
-      z.object({
-        sameAsItem: z.literal(false),
-        name: z.string(),
-        min: z.number(),
-        max: z.number()
-      }),
-      z.object({
-        sameAsItem: z.literal(true)
-      })
-    ]),
-    home: Vector3,
-    block: z.object({
-      name: z.string(),
-      age: z.number()
-    }),
-    refuelLevel: z.number(),
-    dangerousFuelLevel: z.number(),
-    wasteItems: z.array(z.string()).or(z.object({})),
-    bounds: z.object({
-      max: Vector3,
-      min: Vector3
-    }),
-    fuelLimit: z.union([z.number(), z.literal("unlimited")])
-  }).partial()
+    z.object({
+      sameAsItem: z.literal(true)
+    })
+  ]),
+  block: z.object({
+    name: z.string(),
+    age: z.number()
+  }),
+}));
+
+export const TurtleConfigSmash = TurtleConfigBase.merge(z.object({
+  mode: z.literal("smash"),
+  block: z.object({
+    name: z.string()
+  }),
+}));
+
+export const TurtleConfigs = z.union(
+  [
+    TurtleConfigPlant.partial(),
+    TurtleConfigSmash.partial()
+  ]
+)
+
+export const TurtleConfig = z.object({
+  type: z.literal("turtle_config"),
+  id: z.number(),
+  config: TurtleConfigs
 });
+
+export const TurtleYields = z.object({
+  type: z.literal("turtle_yields"),
+  id: z.number(),
+  items: z.number(),
+  seeds: z.number().optional()
+})
 
 export const TurtleMessages = z.union(
   [
@@ -142,7 +170,8 @@ export const TurtleMessages = z.union(
     TurtlePos,
     TurtleMap,
     TurtleInventory,
-    TurtleConfig
+    TurtleConfig,
+    TurtleYields
   ]
 );
 

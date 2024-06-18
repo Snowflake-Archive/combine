@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import type { Inventory } from "../types";
+  import type { Inventory, WebConfig } from "../types";
 
   let inventoryItems = new Array<
   { 
@@ -18,6 +18,8 @@
   export let updateIter = 0;
   $: if(updateIter > 0) { updateInventory() }
 
+  export let config: WebConfig;
+
   function updateInventory() {
     if(!inventory) return;
 
@@ -32,6 +34,7 @@
 
   function filePathFromName(rawName: string) {
     let [type, namespace, name1, name2] = rawName.split(".");
+    if(config.nameOverrides[name1]) name1 = config.nameOverrides[name1];
     return `/icons/${namespace}/textures/${type}/${name2 || name1}.png`;
   }
 

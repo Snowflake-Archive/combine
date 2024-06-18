@@ -11,6 +11,7 @@ export class TurtleSocket extends Socket {
   public inventory: Inventory;
   public config: Config;
   public id: number;
+  public yields: { [index: string]: {items: number, seeds?: number} } = {};
 
   constructor(socket: WebSocket, authMessage: z.infer<typeof TurtleAuth>) {
     super(socket, "turtle", authMessage);
@@ -28,9 +29,9 @@ export class TurtleSocket extends Socket {
 
   onMessage(_message: unknown): void {
     const test = TurtleMessages.safeParse(_message)
+
     if (!test.success) {
-      //console.log((_message as any).type)
-      //console.log(test.error);
+      console.log("Invalid message: ", test.error.errors);
       return;
     }
     const message = _message as z.infer<typeof TurtleMessages>;
@@ -80,6 +81,16 @@ export class TurtleSocket extends Socket {
         of: this.id,
         position: message.position,
         facing: message.facing,
+      }));
+    } else if (message.type === "turtle_yields") {
+      this.yields[Date.now()] = {
+        items: message.items,
+        seeds: message.seeds
+      }
+      this.transmitToSubscribers(JSON.stringify({
+        type: "turtle_yields",
+        of: this.id,
+        yields: this.yields
       }));
     }
   }

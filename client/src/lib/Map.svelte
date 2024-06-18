@@ -9,6 +9,8 @@
   export let updateIter = 0;
   $: if(updateIter > 0) { updateCanvas() }
 
+  const stemRegex = /[A-Za-z]+_stem/i
+
   // extract numeric r, g, b values from `rgb(nn, nn, nn)` string
   function getRgb(color: string): {r: number, g: number, b: number} {
     let [r, g, b] = color.replace('rgb(', '')
@@ -98,8 +100,10 @@
       if(x < 0 || y < 0) return;
       if(x > canvas.width || y > canvas.height) return;
 
+      const isStem = stemRegex.test(item.b)
+
       const cropColor = item.a !== undefined ? config.cropColors[item.b] : undefined
-      const blockColor = config.blockColors[item.b]
+      const blockColor = isStem ? config.blockColors.farmland : config.blockColors[item.b]
 
       ctx.beginPath();
       const colorData = 
@@ -113,6 +117,13 @@
       ctx.fillStyle = fillStyle
       ctx.rect(x, y, cellSizeX, cellSizeY);
       ctx.fill();
+
+      if(isStem) {
+        ctx.beginPath();
+        ctx.arc(x + cellSizeX / 2, y + cellSizeY / 2, cellSizeX / 8, 0, 2 * Math.PI);
+        ctx.fillStyle = "green";
+        ctx.fill();
+      }
 
       if(item.a == 1) {
         ctx.strokeStyle = "rgba(0, 255, 0, 0.5)";

@@ -47,6 +47,7 @@ export class ClientSocket extends Socket {
             map: turtle.map,
             inventory: turtle.inventory,
             config: turtle.config,
+            yields: turtle.yields,
           },
         })
       );

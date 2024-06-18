@@ -46,7 +46,27 @@
   THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
-local VERSION = "2.0.1"
+local VERSION = "2.1"
+
+------------------
+-- Config Check --
+------------------
+local config = require("config")
+
+if config.mode == nil then
+  print("Config \"mode\" is not set. Press Y to set the value to \"plant\", or press any other key to exit...")
+  local _, key = os.pullEvent("key")
+  if key == keys.y then
+    config.mode = "plant"
+
+    local f = fs.open("config.lua", "w")
+    f.write("return " .. textutils.serialise(config))
+    f.close()
+    print("Done & saved")
+  else
+    error("Config \"mode\" is not set.")
+  end
+end
 
 ----------------------
 -- Argument Reading --
@@ -92,7 +112,6 @@ local native = term.current()
 local ws
 
 local ok, err = pcall(function()
-  local config = require("config")
   local warnings = {}
   local cannotOperate = false
 
@@ -105,7 +124,7 @@ local ok, err = pcall(function()
     [config.item.name] = { min = config.item.min, max = config.item.max }
   }
 
-  if not config.seed.sameAsItem then
+  if config.mode == "plant" and not config.seed.sameAsItem then
     itemRequirements[config.seed.name] = {
       min = config.seed.min,
       max = config.seed.max
@@ -187,7 +206,7 @@ local ok, err = pcall(function()
 
   -- Set up bounding box and move to home if we aren't already there.
   tortise.setBoundingBox(config.bounds.min[1], config.bounds.min[2], config.bounds.min[3], config.bounds.max[1], config.bounds.max[2], config.bounds.max[3])
-  tortise.goToAbsolutePosition(unpack(config.home))
+  tortise.goToAbsolutePosition(config.home[1], config.home[2], config.home[3], config.safeDestroyBlocks)
 
   -----------------------
   -- Remote Monitoring --
@@ -283,7 +302,7 @@ local ok, err = pcall(function()
         if v.y == -1 and v.name ~= "minecraft:air" then
           positions[v.x .. "," .. v.z] = true
           local age
-          if v.state.age then
+          if v.state.age and config.block.age then
             age = math.floor((v.state.age / config.block.age) * 10) / 10
           end
 
@@ -316,7 +335,7 @@ local ok, err = pcall(function()
 
     if not ok then
       connected = false
-      debug("[WS] TransMap failed", err)
+      msg("[WS] TransMap failed", err)
       lastConnectionFailure = os.epoch("utc")
     end
   end
@@ -385,6 +404,37 @@ local ok, err = pcall(function()
     if not ok then
       connected = false
       msg("[WS] InvTrans failed", err)
+      lastConnectionFailure = os.epoch("utc")
+    end
+  end
+
+  -- Transmits the contents of the turtle's inventory.
+  local function transmitYields(items, seeds)
+    -- Return if websocket is disabled
+    if args["--disable-remote-monitoring"] then return end
+
+    msg("Transmitting yields", items, seeds)
+
+    -- Return if WS connection has failed in the last minute
+    if lastConnectionFailure + 60 * 1000 > os.epoch("utc") then
+      return
+    end
+
+    local ok, err = pcall(function()
+      -- Serialise message & send.
+      local msg = textutils.serialiseJSON({
+        type = "turtle_yields",
+        id = os.getComputerID(),
+        items = items,
+        seeds = seeds
+      })
+
+      addToMessageQueue(msg)
+    end)
+
+    if not ok then
+      connected = false
+      msg("[WS] YieldTrans failed", err)
       lastConnectionFailure = os.epoch("utc")
     end
   end
@@ -465,28 +515,38 @@ local ok, err = pcall(function()
       if turtle.getFuelLevel() > config.dangerousFuelLevel then
         -- Calculate item & seed count prior to searching
         local preItemCount = tortise.count(config.item.name)
-        local preSeedCount = config.seed.sameAsItem == false and tortise.count(config.item.name) or nil
+        local preSeedCount = (config.mode == "plant" and config.seed.sameAsItem == false) and tortise.count(config.seed.name) or nil
 
         -- Go to all the blocks
         tortise.goToAll(
           -- Name filter
           config.block.name,
           -- State filter
-          { age = config.block.age },
+          { age = (config.mode == "plant" and config.block.age or nil) },
           -- On reach function
           function(tX, tY, tZ)
             -- Dig down and replace
             tortise.dig("down")
-            local didPlaceSeed = tortise.place("down", config.seed.name or config.item.name)
-            if didPlaceSeed == false then
-              msg("Failed to place seed")
-              warnings["No seeds"] = true
-            end
-            for i, v in pairs(map) do
-              if v.x == tX and v.y == tY and v.z == tZ then
-                map[i].state = { age = 0 }
-                transmitMap()
+
+            if config.mode == "plant" then
+              local didPlaceSeed = tortise.place("down", config.seed.name or config.item.name)
+              if didPlaceSeed == false then
+                msg("Failed to place seed")
+                warnings["No seeds"] = true
               end
+              for i, v in pairs(map) do
+                if v.x == tX and v.y == tY and v.z == tZ then
+                  map[i].state = { age = 0 }
+                  transmitMap()
+                end
+              end
+            elseif config.mode == "smash" then
+              for i, v in pairs(map) do
+                if v.x == tX and v.y == tY and v.z == tZ then
+                  map[i].name = "minecraft:air"
+                  transmitMap()
+                end
+              end  
             end
           end,
           -- Disables movement on the Y axis
@@ -499,6 +559,22 @@ local ok, err = pcall(function()
           function(x, y, z, checked, targets)
             -- Transmit a state telling that the turtle found a crop.
             transmitState({x, y, z}, "(Round #" .. tostring(round) .. ") Navigating to crop (" .. tostring(checked) .. "/" .. tostring(targets) .. ")")
+
+            if config.mode == "plant" then
+              for i, v in pairs(map) do
+                if v.x == tX and v.y == tY and v.z == tZ then
+                  map[i].state = { age = config.block.age }
+                  transmitMap()
+                end
+              end
+            elseif config.mode == "smash" then
+              for i, v in pairs(map) do
+                if v.x == tX and v.y == tY and v.z == tZ then
+                  map[i].name = config.block.name
+                  transmitMap()
+                end
+              end  
+            end
           end,
           -- On Move Function
           function(moved, dir)
@@ -507,12 +583,20 @@ local ok, err = pcall(function()
               canPause = true
               while true do sleep(100) end
             end
-          end
+          end,
+          -- Destructive
+          config.safeDestroyBlocks
         )
 
         -- Calculate item & seed count after searching
         local postItemCount = tortise.count(config.item.name)
-        local postSeedCount = config.seed.sameAsItem == false and tortise.count(config.item.name) or nil
+        local postSeedCount = (config.mode == "plant" and config.seed.sameAsItem == false) and tortise.count(config.seed.name) or nil
+
+        if postSeedCount then
+          transmitYields(postItemCount - preItemCount, math.max(postSeedCount - preSeedCount, 0))
+        else
+          transmitYields(postItemCount - preItemCount, nil)
+        end
 
         -- Log numbers
         msg("Net item count:", postItemCount - preItemCount)
@@ -527,7 +611,7 @@ local ok, err = pcall(function()
         config.home[1],
         config.home[2],
         config.home[3],
-        false,
+        config.safeDestroyBlocks,
         -- On Move Function
         function(moved, dir)
           transmitPosition()
@@ -605,10 +689,17 @@ local ok, err = pcall(function()
       end
       
       -- Check for warnings
+      -- Check for warnings
       local inventory = tortise.getInventory()
+
+      local itemsInInventory = 0
+      for i, v in pairs(inventory) do
+        itemsInInventory = itemsInInventory + 1
+      end
+
       warnings["Fuel level dangerously low"] = turtle.getFuelLevel() < config.dangerousFuelLevel
       warnings["Fuel level low"] = turtle.getFuelLevel() < config.refuelLevel
-      warnings["Inventory full"] = #inventory == 16
+      warnings["Inventory full"] = itemsInInventory >= 16
       local cannotOperate = warnings["Fuel level dangerously low"] == true or warnings["Inventory full"] == true
 
       if cannotOperate then
@@ -620,7 +711,7 @@ local ok, err = pcall(function()
           config.home[1],
           config.home[2],
           config.home[3],
-          false,
+          config.safeDestroyBlocks,
           -- On Move Function
           function(moved, dir)
             transmitPosition()
@@ -648,7 +739,7 @@ local ok, err = pcall(function()
             config.home[1],
             config.home[2],
             config.home[3],
-            false,
+            config.safeDestroyBlocks,
             -- On Move Function
             function(moved, dir)
               transmitPosition()
